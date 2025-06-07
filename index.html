@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Donation Email Generator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+      overflow-x: hidden;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+    }
+    .image-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('background.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: -1;
+      filter: brightness(0.8);
+      opacity: 0;
+      animation: gentleFadeIn 1.5s ease-out forwards;
+    }
+    .container {
+      max-width: 600px;
+      margin: 60px auto 100px auto;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      animation: slideUpFadeIn 0.8s cubic-bezier(0.23, 1, 0.32, 1) both;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      text-align: center;
+      transform-origin: top center;
+    }
+    h2 {
+      color: #222;
+      margin-bottom: 25px;
+      opacity: 0;
+      animation: fadeIn 0.6s ease-out 0.3s forwards;
+    }
+    label {
+      font-weight: bold;
+      color: #444;
+      display: block;
+      margin-top: 15px;
+      text-align: left;
+      opacity: 0;
+      animation: fadeInUpSmall 0.5s ease-out 0.4s forwards;
+    }
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0 15px 0;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      outline: none;
+      font-size: 16px;
+      background-color: rgba(255, 255, 255, 0.9);
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      opacity: 0;
+      animation: fadeInUpSmall 0.5s ease-out 0.5s forwards;
+    }
+    input:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+      transform: translateY(-2px);
+    }
+    button {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      box-shadow: 0 4px 6px rgba(13, 110, 253, 0.15);
+      margin-top: 10px;
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      animation: fadeInUpSmall 0.5s ease-out 0.6s forwards;
+    }
+    button:hover {
+      background: linear-gradient(135deg, #0b5ed7 0%, #0845aa 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(13, 110, 253, 0.2);
+    }
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(13, 110, 253, 0.15);
+    }
+    button::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+    }
+    button:hover::after {
+      transform: translateX(100%);
+    }
+    .copy-btn {
+      display: inline-block;
+      margin-top: 10px;
+      background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      width: auto;
+      min-width: 120px;
+      animation: fadeIn 0.5s ease-in;
+      opacity: 1 !important; /* Force visibility */
+    }
+    .copy-btn:hover {
+      background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+    }
+    .copied {
+      background: linear-gradient(135deg, #28a745 0%, #218838 100%) !important;
+      animation: happyJump 0.8s cubic-bezier(0.68, -0.6, 0.32, 1.6), confettiExplosion 0.5s ease-out 0.3s;
+    }
+    #emailResult {
+      display: none;
+      margin-top: 25px;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      animation: gentleAppear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      text-align: left;
+      transform-origin: top center;
+    }
+    .email-section {
+      margin-bottom: 20px;
+    }
+    .email-section h4 {
+      margin-bottom: 10px;
+      color: #444;
+    }
+    .copy-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .copy-buttons button {
+      margin-top: 0;
+      width: auto;
+      flex: 1;
+      opacity: 1 !important; /* Force visibility */
+      animation: none !important; /* Remove initial animation */
+    }
+    .refresh-btn {
+      margin-top: 25px;
+      background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 16px;
+      opacity: 0;
+      animation: fadeInUpSmall 0.5s ease-out 0.7s forwards;
+    }
+    .refreshing {
+      background: linear-gradient(135deg, #ffc107 0%, #ffab00 100%) !important;
+      color: #000 !important;
+      animation: pulseGlow 1.5s ease infinite, gentleSpin 1.5s linear infinite;
+    }
+    footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      text-align: center;
+      padding: 12px;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      transform: translateY(100%);
+      transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+      opacity: 0;
+      animation: fadeIn 0.8s ease-out 1s forwards;
+    }
+    footer.visible {
+      transform: translateY(0);
+    }
+
+    /* Enhanced Animations */
+    @keyframes gentleFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUpFadeIn {
+      from { 
+        opacity: 0;
+        transform: translateY(30px) scale(0.98);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    @keyframes fadeInUpSmall {
+      from { 
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes happyJump {
+      0%, 100% { transform: translateY(0); }
+      20% { transform: translateY(-10px); }
+      40% { transform: translateY(0); }
+      60% { transform: translateY(-5px); }
+      80% { transform: translateY(0); }
+    }
+    @keyframes gentleAppear {
+      from { 
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to { 
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    @keyframes pulseGlow {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+      }
+      70% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 15px rgba(255, 193, 7, 0);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+      }
+    }
+    @keyframes gentleSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes confettiExplosion {
+      0% {
+        background-position: 0% 50%, 0% 50%;
+      }
+      20% {
+        background-position: 20% 40%, 10% 60%;
+      }
+      40% {
+        background-position: 40% 30%, 20% 70%;
+      }
+      60% {
+        background-position: 60% 20%, 30% 80%;
+      }
+      80% {
+        background-position: 80% 10%, 40% 90%;
+      }
+      100% {
+        background-position: 100% 0%, 50% 100%;
+      }
+    }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #f00;
+      opacity: 0;
+      animation: confettiFall 3s ease-out forwards;
+    }
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="image-background"></div>
+  <div class="container">
+    <h2>Donation Email Generator</h2>
+    <form id="donationForm">
+      <label for="customerName">Customer Name:</label>
+      <input type="text" id="customerName" required>
+      
+      <label for="amount">Amount:</label>
+      <input type="number" id="amount" required>
+      
+      <button type="submit" id="generateBtn">Generate Email</button>
+    </form>
+
+    <div id="emailResult">
+      <div class="email-section">
+        <h4>Email Subject</h4>
+        <p id="emailSubject"></p>
+        <div class="copy-buttons">
+          <button class="copy-btn" id="copySubject">Copy Subject</button>
+        </div>
+      </div>
+      
+      <div class="email-section">
+        <h4>Email Body</h4>
+        <p id="emailContent" style="white-space: pre-line;"></p>
+        <div class="copy-buttons">
+          <button class="copy-btn" id="copyBody">Copy Body</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="refresh-btn" onclick="refreshPage()">🔄 Refresh Form</button>
+  </div>
+
+  <footer id="footer">© 2025 iStore NDS. All rights reserved.</footer>
+
+  <script>
+    document.getElementById("donationForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      const name = document.getElementById("customerName").value;
+      const amount = document.getElementById("amount").value;
+
+      if (!name || !amount) return;
+
+      // Add a little animation to the form submission
+      const container = document.querySelector('.container');
+      container.style.animation = 'none';
+      container.offsetHeight; // Trigger reflow
+      container.style.animation = 'gentlePulse 0.6s ease';
+
+      setTimeout(() => {
+        const subject = `₹${amount} Donation Received - Nilam Direct Bank`;
+        const body = `Dear ${name},\n\nThank you for your generous donation of ₹${amount} towards the Nilam Direct Bank Foundation. Your contribution helps us make a difference.\n\nBest Regards,\nNilam Direct Bank Team`;
+
+        document.getElementById("emailSubject").innerText = subject;
+        document.getElementById("emailContent").innerText = body;
+        
+        // Show result with animation
+        const result = document.getElementById("emailResult");
+        result.style.display = "block";
+        result.style.animation = 'none';
+        result.offsetHeight; // Trigger reflow
+        result.style.animation = 'gentleAppear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+      }, 300);
+    });
+
+    function copyText(text, button) {
+      navigator.clipboard.writeText(text).then(() => {
+        button.classList.add("copied");
+        button.textContent = "Copied!";
+        
+        // Create confetti effect
+        createConfetti(button);
+        
+        setTimeout(() => {
+          button.classList.remove("copied");
+          button.textContent = button.id === "copySubject" ? "Copy Subject" : "Copy Body";
+        }, 3000);
+      });
+    }
+
+    function createConfetti(element) {
+      const rect = element.getBoundingClientRect();
+      const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'];
+      
+      for (let i = 0; i < 20; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = `${rect.left + rect.width/2}px`;
+        confetti.style.top = `${rect.top}px`;
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.width = `${Math.random() * 8 + 4}px`;
+        confetti.style.height = `${Math.random() * 8 + 4}px`;
+        confetti.style.animationDuration = `${Math.random() * 2 + 1}s`;
+        document.body.appendChild(confetti);
+        
+        // Remove confetti after animation
+        setTimeout(() => {
+          confetti.remove();
+        }, 3000);
+      }
+    }
+
+    document.getElementById("copySubject").addEventListener("click", function () {
+      const subjectText = document.getElementById("emailSubject").innerText;
+      copyText(subjectText, this);
+    });
+
+    document.getElementById("copyBody").addEventListener("click", function () {
+      const bodyText = document.getElementById("emailContent").innerText;
+      copyText(bodyText, this);
+    });
+
+    function refreshPage() {
+      const btn = document.querySelector(".refresh-btn");
+      btn.classList.add("refreshing");
+      btn.innerHTML = '<span>🔄 Refreshing...</span>';
+      
+      // Animate container out
+      document.querySelector('.container').style.animation = 'slideUpFadeIn 0.6s reverse forwards';
+      
+      setTimeout(() => {
+        location.reload();
+      }, 800);
+    }
+
+    const footer = document.getElementById("footer");
+    let lastScrollTop = 0;
+    window.addEventListener("scroll", () => {
+      const st = window.scrollY || document.documentElement.scrollTop;
+      if (st > lastScrollTop) {
+        footer.classList.add("visible");
+      } else {
+        footer.classList.remove("visible");
+      }
+      lastScrollTop = st <= 0 ? 0 : st;
+    });
+
+    // Initial footer animation
+    setTimeout(() => {
+      footer.classList.add("visible");
+    }, 100);
+  </script>
+</body>
+</html>
