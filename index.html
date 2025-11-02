@@ -277,6 +277,12 @@
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .email-preview-footer .btn {
+            flex: 1;
+            min-width: 120px;
         }
         
         /* Warning message */
@@ -349,6 +355,14 @@
             .header h1 {
                 font-size: 20px;
             }
+            
+            .email-preview-footer {
+                flex-direction: column;
+            }
+            
+            .email-preview-footer .btn {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
@@ -401,6 +415,9 @@
                 <button id="copyButton" class="btn btn-outline">
                     <i class="far fa-copy"></i> Copy Body
                 </button>
+                <button id="openEmailButton" class="btn btn-primary">
+                    <i class="fas fa-envelope-open"></i> Open in Email App
+                </button>
             </div>
         </div>
         
@@ -417,6 +434,10 @@
     <script>
         // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // Store email content for reuse
+        let emailSubject = "";
+        let emailBody = "";
 
         // Refresh button functionality
         document.getElementById('refreshButton').addEventListener('click', function() {
@@ -475,11 +496,11 @@
                 generateButton.innerHTML = '<i class="fas fa-envelope"></i> Generate Email';
                 
                 // Generate email content
-                const subject = `Thank You for Your ₹${amount} Donation`;
-                const emailBody = `Dear ${donorName},\n\nWe are deeply grateful for your generous donation of ₹${amount} received on ${currentDate}. Your support helps us continue our mission and make a meaningful impact.\n\nWith sincere appreciation,\nThe Nilam Direct Bank Foundation Team`;
+                emailSubject = `Thank You for Your ₹${amount} Donation`;
+                emailBody = `Dear ${donorName},\n\nWe are deeply grateful for your generous donation of ₹${amount} received on ${currentDate}. Your support helps us continue our mission and make a meaningful impact.\n\nWith sincere appreciation,\nThe Nilam Direct Bank Foundation Team`;
                 
                 // Display email preview
-                document.getElementById("emailSubject").textContent = subject;
+                document.getElementById("emailSubject").textContent = emailSubject;
                 document.getElementById("emailContent").textContent = emailBody;
                 document.getElementById("emailPreview").classList.add('show');
                 
@@ -490,10 +511,9 @@
 
         // Copy functions
         function copySubject() {
-            const subjectText = document.getElementById("emailSubject").textContent;
             const button = document.getElementById("copySubjectButton");
             
-            navigator.clipboard.writeText(subjectText)
+            navigator.clipboard.writeText(emailSubject)
                 .then(() => {
                     // Visual feedback
                     button.innerHTML = '<i class="fas fa-check"></i> Copied!';
@@ -517,7 +537,6 @@
         }
 
         function copyToClipboard() {
-            const emailBody = document.getElementById("emailContent").textContent;
             const button = document.getElementById("copyButton");
             
             navigator.clipboard.writeText(emailBody)
@@ -543,9 +562,28 @@
                 .catch(err => console.error('Failed to copy:', err));
         }
 
+        function openInEmailApp() {
+            const button = document.getElementById("openEmailButton");
+            
+            // Create mailto link
+            const mailtoLink = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+            
+            // Open default email client
+            window.location.href = mailtoLink;
+            
+            // Visual feedback
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening...';
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+            }, 2000);
+        }
+
         // Add event listeners
         document.getElementById('copySubjectButton').addEventListener('click', copySubject);
         document.getElementById('copyButton').addEventListener('click', copyToClipboard);
+        document.getElementById('openEmailButton').addEventListener('click', openInEmailApp);
         
         // Input field validation on blur
         document.getElementById('donorName').addEventListener('blur', function() {
